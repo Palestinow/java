@@ -3,7 +3,7 @@ import java.util.Arrays;
 
 public class Mapa implements Serializable {
 
-    public static final int TAMANHO = 20;
+    public static final int TAMANHO = 15;
     private static final char VAZIO = 'V';
     private static final char OCULTO = 'O';
     private static final char ACERTO = 'X';
@@ -23,7 +23,6 @@ public class Mapa implements Serializable {
 
     public boolean posicionarEmbarcacao(EmbarcacaoGeral emb, int linha, int coluna, char direcao) {
         int tamanho = emb.getTamanho();
-        // Validar posição e espaços livres, considerando adjacências
 
         int dLinha = 0, dColuna = 0;
         switch (direcao) {
@@ -33,22 +32,18 @@ public class Mapa implements Serializable {
             default: return false;
         }
 
-        // Verificar limites
         int fimLinha = linha + dLinha * (tamanho - 1);
         int fimColuna = coluna + dColuna * (tamanho - 1);
 
         if (fimLinha >= TAMANHO || fimColuna >= TAMANHO) return false;
 
-        // Verificar espaço vazio e adjacência
         for (int i = 0; i < tamanho; i++) {
             int l = linha + i * dLinha;
             int c = coluna + i * dColuna;
             if (mapaInterno[l][c] != VAZIO) return false;
-            // Verifica se não tem embarcação adjacente
             if (temEmbarcacaoAdjacente(l, c)) return false;
         }
 
-        // Colocar embarcação
         for (int i = 0; i < tamanho; i++) {
             int l = linha + i * dLinha;
             int c = coluna + i * dColuna;
@@ -67,9 +62,11 @@ public class Mapa implements Serializable {
         return false;
     }
 
+    // Agora destrói toda a embarcação ao acertar qualquer parte dela
     public boolean atacar(int linha, int coluna) {
         if (mapaInterno[linha][coluna] != VAZIO && mapaVisivel[linha][coluna] == OCULTO) {
-            mapaVisivel[linha][coluna] = ACERTO;
+            char simboloEmbarcacao = mapaInterno[linha][coluna];
+            destruirEmbarcacao(simboloEmbarcacao);
             return true;
         } else if (mapaVisivel[linha][coluna] == OCULTO) {
             mapaVisivel[linha][coluna] = ERRO;
@@ -77,8 +74,19 @@ public class Mapa implements Serializable {
         return false;
     }
 
+    // Marca todas as partes da embarcação como destruídas
+    private void destruirEmbarcacao(char simbolo) {
+        for (int i = 0; i < TAMANHO; i++) {
+            for (int j = 0; j < TAMANHO; j++) {
+                if (mapaInterno[i][j] == simbolo) {
+                    mapaVisivel[i][j] = ACERTO;
+                    mapaInterno[i][j] = 'Y';
+                }
+            }
+        }
+    }
+
     public void atualizarEstadoAposAtaque(int linha, int coluna) {
-        // Marca 'Y' no mapaInterno para embarcação atingida
         if (mapaVisivel[linha][coluna] == ACERTO) {
             mapaInterno[linha][coluna] = 'Y';
         }
@@ -87,13 +95,16 @@ public class Mapa implements Serializable {
     public void mostrarMapaVisivel() {
         System.out.print("   ");
         for (int c = 0; c < TAMANHO; c++) {
-            System.out.printf("%2d ", c);
+            char letraColuna = (char) ('A' + c);
+            System.out.printf(" %c ", letraColuna);
         }
         System.out.println();
         for (int i = 0; i < TAMANHO; i++) {
             System.out.printf("%2d ", i);
             for (int j = 0; j < TAMANHO; j++) {
-                System.out.print(" " + mapaVisivel[i][j] + " ");
+                char simbolo = mapaVisivel[i][j];
+                if (simbolo == OCULTO) simbolo = '*';
+                System.out.print(" " + simbolo + " ");
             }
             System.out.println();
         }

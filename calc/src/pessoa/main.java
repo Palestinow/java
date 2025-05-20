@@ -1,3 +1,4 @@
+package pessoa;
 public class main {
 
 /*      String nome;

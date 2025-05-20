@@ -61,57 +61,74 @@ public class Jogo implements Serializable {
     }
 
     public void iniciar() {
-        if (scanner == null) scanner = new Scanner(System.in);
-        Jogador jogadorAtual = jogador1;
-        Jogador jogadorOponente = jogador2;
+    if (scanner == null) scanner = new Scanner(System.in);
+    Jogador jogadorAtual = jogador1;
+    Jogador jogadorOponente = jogador2;
 
-        while (true) {
-            System.out.println("\nMapa visível para " + jogadorAtual.getNome() + ":");
-            mapa.mostrarMapaVisivel();
+    while (true) {
+        System.out.println("\nMapa visível para " + jogadorAtual.getNome() + ":");
+        mapa.mostrarMapaVisivel();
 
-            System.out.print(jogadorAtual.getNome() + ", digite linha (0 a 19) e coluna (0 a 19) para atacar (ex: 5 10): ");
-            int linha = scanner.nextInt();
-            int coluna = scanner.nextInt();
+        System.out.print(jogadorAtual.getNome() + ", digite linha (0 a 19) e coluna (A a T) para atacar (ex: 5 J): ");
+        int linha;
+        String colunaStr;
+        int coluna;
 
-            if (linha < 0 || linha >= Mapa.TAMANHO || coluna < 0 || coluna >= Mapa.TAMANHO) {
-                System.out.println("Coordenadas inválidas. Tente novamente.");
+        // Leitura e validação da linha e coluna
+        try {
+            linha = scanner.nextInt();
+            colunaStr = scanner.next().toUpperCase();
+            if (colunaStr.length() != 1 || colunaStr.charAt(0) < 'A' || colunaStr.charAt(0) > 'T') {
+                System.out.println("Coluna inválida. Digite uma letra de A a T.");
+                scanner.nextLine(); // Limpa buffer
                 continue;
             }
-
-            boolean acertou = mapa.atacar(linha, coluna);
-            if (acertou) {
-                System.out.println("Acertou uma embarcação!");
-                jogadorAtual.addPontuacao(10);
-            } else {
-                System.out.println("Errou.");
-            }
-
-            mapa.atualizarEstadoAposAtaque(linha, coluna);
-
-            try {
-                SalvadorDePartida.salvar(this);
-            } catch (Exception e) {
-                System.out.println("Erro ao salvar partida: " + e.getMessage());
-            }
-
-            if (jogadorAtual.getPontuacao() >= 50) {
-                System.out.println("Fim de jogo! " + jogadorAtual.getNome() + " venceu!");
-                System.out.println("Pontuação final: " + jogadorAtual.getPontuacao());
-
-                RegistroDeRanking.salvarPontuacao(jogadorAtual.getNome(), jogadorAtual.getPontuacao());
-                int posicao = RegistroDeRanking.posicaoNoRanking(jogadorAtual.getNome());
-                System.out.println("Posição no ranking: " + posicao);
-                System.out.println("\nRanking completo:");
-                RegistroDeRanking.mostrarRanking();
-
-                break;
-            }
-
-            Jogador temp = jogadorAtual;
-            jogadorAtual = jogadorOponente;
-            jogadorOponente = temp;
+            coluna = colunaStr.charAt(0) - 'A';
+        } catch (Exception e) {
+            System.out.println("Entrada inválida. Tente novamente.");
+            scanner.nextLine(); // Limpa buffer
+            continue;
         }
 
-        scanner.close();
+        if (linha < 0 || linha >= Mapa.TAMANHO || coluna < 0 || coluna >= Mapa.TAMANHO) {
+            System.out.println("Coordenadas inválidas. Tente novamente.");
+            continue;
+        }
+
+        boolean acertou = mapa.atacar(linha, coluna);
+        if (acertou) {
+            System.out.println("Acertou uma embarcação!");
+            jogadorAtual.addPontuacao(10);
+        } else {
+            System.out.println("Errou.");
+        }
+
+        mapa.atualizarEstadoAposAtaque(linha, coluna);
+
+        try {
+            SalvadorDePartida.salvar(this);
+        } catch (Exception e) {
+            System.out.println("Erro ao salvar partida: " + e.getMessage());
+        }
+
+        if (jogadorAtual.getPontuacao() >= 50) {
+            System.out.println("Fim de jogo! " + jogadorAtual.getNome() + " venceu!");
+            System.out.println("Pontuação final: " + jogadorAtual.getPontuacao());
+
+            RegistroDeRanking.salvarPontuacao(jogadorAtual.getNome(), jogadorAtual.getPontuacao());
+            int posicao = RegistroDeRanking.posicaoNoRanking(jogadorAtual.getNome());
+            System.out.println("Posição no ranking: " + posicao);
+            System.out.println("\nRanking completo:");
+            RegistroDeRanking.mostrarRanking();
+
+            break;
+        }
+
+        Jogador temp = jogadorAtual;
+        jogadorAtual = jogadorOponente;
+        jogadorOponente = temp;
     }
+
+    scanner.close();
+}
 }
